@@ -14,7 +14,115 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      design_messages: {
+        Row: {
+          adjustments: Json
+          content: string
+          created_at: string
+          design_id: string
+          id: string
+          role: string
+          user_id: string
+          version_number: number | null
+        }
+        Insert: {
+          adjustments?: Json
+          content: string
+          created_at?: string
+          design_id: string
+          id?: string
+          role: string
+          user_id: string
+          version_number?: number | null
+        }
+        Update: {
+          adjustments?: Json
+          content?: string
+          created_at?: string
+          design_id?: string
+          id?: string
+          role?: string
+          user_id?: string
+          version_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "design_messages_design_id_fkey"
+            columns: ["design_id"]
+            isOneToOne: false
+            referencedRelation: "designs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      design_versions: {
+        Row: {
+          checks: Json
+          created_at: string
+          design_id: string
+          id: string
+          image_path: string
+          user_id: string
+          version_number: number
+        }
+        Insert: {
+          checks?: Json
+          created_at?: string
+          design_id: string
+          id?: string
+          image_path: string
+          user_id: string
+          version_number: number
+        }
+        Update: {
+          checks?: Json
+          created_at?: string
+          design_id?: string
+          id?: string
+          image_path?: string
+          user_id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "design_versions_design_id_fkey"
+            columns: ["design_id"]
+            isOneToOne: false
+            referencedRelation: "designs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      designs: {
+        Row: {
+          created_at: string
+          id: string
+          sent_at: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sent_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sent_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
