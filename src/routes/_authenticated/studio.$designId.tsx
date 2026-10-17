@@ -214,7 +214,7 @@ function DesignPage() {
             </select>
           )}
         </div>
-        <div className="grid aspect-[2/3] place-items-center overflow-hidden rounded-xl bg-muted">
+        <div className="grid aspect-[2/3] shrink-0 place-items-center overflow-hidden rounded-xl bg-muted">
           {current?.url ? (
             <img src={current.url} alt={`Flyer v${current.version_number}`} className="h-full w-full object-contain" />
           ) : (
