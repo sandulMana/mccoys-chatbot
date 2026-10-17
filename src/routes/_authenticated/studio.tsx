@@ -13,6 +13,8 @@ export const Route = createFileRoute("/_authenticated/studio")({
       { name: "description", content: "Your McCoy's flyer designs." },
       { property: "og:title", content: "Brand Studio · McCoy's" },
       { property: "og:description", content: "Your McCoy's flyer designs." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: StudioLayout,

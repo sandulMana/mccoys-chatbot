@@ -12,6 +12,14 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/studio/$designId")({
+  head: () => ({ meta: [
+    { title: "Edit flyer · McCoy's Brand Studio" },
+    { name: "description", content: "Review and refine your McCoy's flyer designs." },
+    { property: "og:title", content: "Edit flyer · McCoy's Brand Studio" },
+    { property: "og:description", content: "Review and refine your McCoy's flyer designs." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
   component: DesignPage,
 });
 
