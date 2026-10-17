@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -12,7 +13,9 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  beforeLoad: () => {
+  beforeLoad: async () => {
+    // OAuth returns here with tokens in the URL hash; let Supabase consume them before redirecting drops the hash.
+    await supabase.auth.getSession();
     throw redirect({ to: "/studio" });
   },
 });
