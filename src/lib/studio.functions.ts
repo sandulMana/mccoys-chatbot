@@ -84,7 +84,7 @@ export const generateVersion = createServerFn({ method: "POST" })
     const { data: msgs, error } = await supabase
       .from("design_messages").select("role,content").eq("design_id", data.designId).order("created_at");
     if (error) throw new Error(error.message);
-    if (!msgs?.length || msgs[msgs.length - 1].role !== "user") return { skipped: true };
+    if (!msgs?.length || msgs[msgs.length - 1]!.role !== "user") return { skipped: true };
 
     const plan = await planFlyer(apiKey, msgs.map((m: any) => ({ role: m.role, content: m.content })));
 

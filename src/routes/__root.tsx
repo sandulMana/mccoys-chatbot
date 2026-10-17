@@ -39,7 +39,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-3xl text-primary">This page didn't load</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{error instanceof Error ? error.message : "Unexpected error"}</p>
         <button
           onClick={() => {
             router.invalidate();
