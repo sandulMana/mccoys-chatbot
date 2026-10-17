@@ -8,6 +8,14 @@ import { Composer } from "@/components/Composer";
 import { BrandKit } from "@/components/BrandKit";
 
 export const Route = createFileRoute("/_authenticated/studio/")({
+  head: () => ({ meta: [
+    { title: "New design · McCoy's Brand Studio" },
+    { name: "description", content: "Create a new McCoy's marketing flyer." },
+    { property: "og:title", content: "New design · McCoy's Brand Studio" },
+    { property: "og:description", content: "Create a new McCoy's marketing flyer." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
   component: NewDesign,
 });
 

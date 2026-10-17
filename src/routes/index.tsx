@@ -8,6 +8,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Describe your promo and get an on-brand McCoy's flyer." },
       { property: "og:title", content: "McCoy's Brand Studio" },
       { property: "og:description", content: "Describe your promo and get an on-brand McCoy's flyer." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   beforeLoad: () => {

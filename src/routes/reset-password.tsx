@@ -63,7 +63,6 @@ function ResetPasswordPage() {
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
       sessionStorage.removeItem("mccoys-password-recovery");
-      const { queryClient } = Route.useRouteContext;
       await navigate({ to: "/studio", replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not reset your password. Please try again.");
