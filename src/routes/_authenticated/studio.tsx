@@ -34,7 +34,7 @@ function StudioLayout() {
   const [q, setQ] = useState("");
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const name = (user.user_metadata?.full_name as string) || user.email || "Manager";
+  const name = (user.user_metadata?.['full_name'] as string) || user.email || "Manager";
   const initials = name.split(/[\s@]/).filter(Boolean).slice(0, 2).map((s) => s[0]!.toUpperCase()).join("");
 
   const groups = useMemo(() => {
