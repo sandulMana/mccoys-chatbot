@@ -121,12 +121,47 @@ export const sendToMarketing = createServerFn({ method: "POST" })
   .inputValidator((d: { designId: string; neededBy: string; uses: string }) =>
     z.object({ designId: z.string().uuid(), neededBy: z.string().max(40), uses: z.string().max(200) }).parse(d))
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { supabase, claims } = context;
+    const apiKey = process.env["RESEND_API_KEY"];
+    if (!apiKey) throw new Error("Email is not configured.");
+    const senderEmail = claims.email as string | undefined;
+    if (!senderEmail) throw new Error("Your account has no email address.");
+
+    const { data: design, error: de } = await supabase
+      .from("designs").select("title").eq("id", data.designId).single();
+    if (de || !design) throw new Error("Design not found");
+    const { data: latest, error: le } = await supabase
+      .from("design_versions").select("version_number,image_path").eq("design_id", data.designId)
+      .order("version_number", { ascending: false }).limit(1).maybeSingle();
+    if (le) throw new Error(le.message);
+    if (!latest) throw new Error("Generate a flyer before sending it to Marketing.");
+
+    const file = await supabase.storage.from("flyers").download(latest.image_path);
+    if (file.error) throw new Error(file.error.message);
+    const { data: link } = await supabase.storage
+      .from("flyers").createSignedUrl(latest.image_path, 60 * 60 * 24 * 7);
+
+    // Email first, so a delivery failure leaves the design unsent and retryable.
+    const { sendMarketingEmail } = await import("./email.server");
+    await sendMarketingEmail({
+      apiKey,
+      to: MARKETING_EMAIL,
+      senderEmail,
+      designTitle: design.title,
+      versionNumber: latest.version_number,
+      neededBy: data.neededBy,
+      uses: data.uses,
+      imageUrl: link?.signedUrl,
+      image: {
+        filename: `mccoys-flyer-v${latest.version_number}.png`,
+        bytes: new Uint8Array(await file.data.arrayBuffer()),
+      },
+    });
+
     const { error } = await supabase
       .from("designs")
       .update({ status: "sent", sent_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq("id", data.designId);
     if (error) throw new Error(error.message);
-    // Email delivery to MARKETING_EMAIL is enabled once a sender domain is set up.
-    return { ok: true, to: MARKETING_EMAIL, emailed: false };
+    return { ok: true, to: MARKETING_EMAIL, emailed: true };
   });
