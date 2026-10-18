@@ -1,7 +1,7 @@
-// Sends transactional email through Resend's HTTP API.
+// Sends transactional email through the Lovable connector gateway (Resend).
 // Without a verified domain, Resend only allows onboarding@resend.dev as the sender,
 // and only delivers to the Resend account owner's address.
-const DEFAULT_FROM_ADDRESS = "onboarding@resend.dev";
+const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 
 type Attachment = { filename: string; bytes: Uint8Array };
 
@@ -30,7 +30,9 @@ function toBase64(bytes: Uint8Array) {
 }
 
 export async function sendMarketingEmail(e: MarketingEmail) {
-  const fromAddress = process.env["RESEND_FROM_EMAIL"] || DEFAULT_FROM_ADDRESS;
+  const lovableKey = process.env["LOVABLE_API_KEY"];
+  if (!lovableKey) throw new Error("Lovable gateway is not configured.");
+  const fromAddress = process.env["RESEND_FROM_EMAIL"] || "onboarding@resend.dev";
   // Display names can't contain unescaped quotes or angle brackets.
   const fromName = `${e.senderEmail} via McCoy's Brand Studio`.replace(/["<>]/g, "");
   const rows: [string, string][] = [
