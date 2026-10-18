@@ -138,11 +138,13 @@ export const sendToMarketing = createServerFn({ method: "POST" })
 
     const file = await supabase.storage.from("flyers").download(latest.image_path);
     if (file.error) throw new Error(file.error.message);
+    const pngBytes = new Uint8Array(await file.data.arrayBuffer());
     const { data: link } = await supabase.storage
       .from("flyers").createSignedUrl(latest.image_path, 60 * 60 * 24 * 7);
 
     // Email first, so a delivery failure leaves the design unsent and retryable.
     const { sendMarketingEmail } = await import("./email.server");
+    const { pngToPsd } = await import("./psd.server");
     await sendMarketingEmail({
       apiKey,
       to: MARKETING_EMAIL,
@@ -152,10 +154,8 @@ export const sendToMarketing = createServerFn({ method: "POST" })
       neededBy: data.neededBy,
       uses: data.uses,
       imageUrl: link?.signedUrl,
-      image: {
-        filename: `mccoys-flyer-v${latest.version_number}.png`,
-        bytes: new Uint8Array(await file.data.arrayBuffer()),
-      },
+      image: { filename: `mccoys-flyer-v${latest.version_number}.png`, bytes: pngBytes },
+      psd: { filename: `mccoys-flyer-v${latest.version_number}.psd`, bytes: pngToPsd(pngBytes) },
     });
 
     const { error } = await supabase

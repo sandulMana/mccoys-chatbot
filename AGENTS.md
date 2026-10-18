@@ -11,3 +11,4 @@
 
 - Password recovery lives on the public `/reset-password` route, separate from sign-in redirects, so recovery sessions can set a password before entering the studio.
 - Keep the root identity-change subscriber as the sole auth-state listener; sign-in actions navigate explicitly to avoid competing redirects.
+- Flyer PSDs are built from the PNG by the pure-JS writer in `src/lib/psd.server.ts` — no canvas/native deps, so it stays edge-runtime safe; edit it, don't swap in an image library.

@@ -15,6 +15,7 @@ export type MarketingEmail = {
   uses: string;
   imageUrl: string | undefined;
   image: Attachment;
+  psd: Attachment;
 };
 
 function escapeHtml(s: string) {
@@ -46,13 +47,13 @@ export async function sendMarketingEmail(e: MarketingEmail) {
     <table cellpadding="6" style="border-collapse:collapse">
       ${rows.map(([k, v]) => `<tr><td><strong>${escapeHtml(k)}</strong></td><td>${escapeHtml(v)}</td></tr>`).join("")}
     </table>
-    <p>The flyer is attached${e.imageUrl ? `, or <a href="${escapeHtml(e.imageUrl)}">view it here</a> (link expires in 7 days)` : ""}.</p>`;
+    <p>The flyer is attached as a PNG with an editable Photoshop file${e.imageUrl ? `, or <a href="${escapeHtml(e.imageUrl)}">view the PNG here</a> (link expires in 7 days)` : ""}.</p>`;
   const text = [
     "A store manager sent a flyer for Marketing review. Reply to this email to respond to them directly.",
     "",
     ...rows.map(([k, v]) => `${k}: ${v}`),
     "",
-    "The flyer is attached.",
+    "The flyer is attached as a PNG and an editable Photoshop file.",
   ].join("\n");
 
   const res = await fetch(`${GATEWAY_URL}/emails`, {
@@ -69,7 +70,10 @@ export async function sendMarketingEmail(e: MarketingEmail) {
       subject: `Flyer for review: ${e.designTitle} (v${e.versionNumber})`,
       html,
       text,
-      attachments: [{ filename: e.image.filename, content: toBase64(e.image.bytes) }],
+      attachments: [
+        { filename: e.image.filename, content: toBase64(e.image.bytes) },
+        { filename: e.psd.filename, content: toBase64(e.psd.bytes) },
+      ],
     }),
   });
   if (!res.ok) {
