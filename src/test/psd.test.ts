@@ -39,9 +39,12 @@ describe("pngToPsd", () => {
     // Final section: 2-byte compression marker followed by R,G,B,A planes.
     const merged = psd.length - 2 - 4 * width * height;
     expect(merged).toBeGreaterThan(0);
-    expect(psd[merged]).toBe(255); // red channel of pixel 0
-    expect(psd[merged + width * height]).toBe(0); // green channel of pixel 0
-    expect(psd[merged + 2 * width * height]).toBe(0); // blue channel of pixel 0
-    expect(psd[merged + 3 * width * height]).toBe(255); // alpha channel of pixel 0
+    expect(psd[merged]).toBe(0); // raw compression marker
+    expect(psd[merged + 1]).toBe(0);
+    const data = merged + 2;
+    expect(psd[data]).toBe(255); // red channel of pixel 0
+    expect(psd[data + width * height]).toBe(0); // green channel of pixel 0
+    expect(psd[data + 2 * width * height]).toBe(0); // blue channel of pixel 0
+    expect(psd[data + 3 * width * height]).toBe(255); // alpha channel of pixel 0
   });
 });
