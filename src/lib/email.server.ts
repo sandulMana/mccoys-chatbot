@@ -55,9 +55,13 @@ export async function sendMarketingEmail(e: MarketingEmail) {
     "The flyer is attached.",
   ].join("\n");
 
-  const res = await fetch("https://api.resend.com/emails", {
+  const res = await fetch(`${GATEWAY_URL}/emails`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${e.apiKey}`, "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${lovableKey}`,
+      "X-Connection-Api-Key": e.apiKey,
+    },
     body: JSON.stringify({
       from: `"${fromName}" <${fromAddress}>`,
       to: [e.to],
