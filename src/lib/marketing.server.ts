@@ -20,7 +20,7 @@ export async function submitMarketingSnapshot(sb: SupabaseClient<Database>, inpu
   const { error } = await sb.from('marketing_submissions').insert({
     id, design_id: input.designId, version_id: input.versionId, submitted_by: input.userId, sender_email: input.email,
     title: input.title, version_number: input.versionNumber, png_path: pngPath, psd_path: psdPath,
-    checks: input.checks, needed_by: input.neededBy, uses: input.uses,
+    checks: input.checks ?? [], needed_by: input.neededBy, uses: input.uses,
   });
   if (error) { await sb.storage.from('flyers').remove([pngPath, psdPath]); throw new Error(error.message); }
   await sb.from('marketing_audit_events').insert({ submission_id: id, actor_id: input.userId, action: 'submitted' });
