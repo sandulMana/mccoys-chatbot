@@ -2,7 +2,8 @@ import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-rout
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { LogOut, Plus, Search } from "lucide-react";
+import { Inbox, LogOut, Plus, Search } from "lucide-react";
+import { Button } from '@/components/ui/button';
 import { supabase } from "@/integrations/supabase/client";
 import { listDesigns } from "@/lib/studio.functions";
 
@@ -100,6 +101,7 @@ function StudioLayout() {
             </div>
           ))}
         </nav>
+        <div className="px-3 pb-3"><Button asChild variant="ghost" className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"><Link to="/marketing" search={{ folder: 'inbox' }}><Inbox /> Marketing review</Link></Button></div>
         <div className="flex items-center gap-3 border-t border-sidebar-border p-4">
           <div className="grid h-10 w-10 place-items-center rounded-full bg-sidebar-primary font-bold text-sidebar-primary-foreground">
             {initials}

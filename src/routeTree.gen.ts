@@ -16,6 +16,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedStudioRouteImport } from './routes/_authenticated/studio'
 import { Route as AuthenticatedStudioIndexRouteImport } from './routes/_authenticated/studio.index'
 import { Route as AuthenticatedStudioDesignIdRouteImport } from './routes/_authenticated/studio.$designId'
+import { Route as ApiPublicMarketingCleanupRouteImport } from './routes/api/public/marketing-cleanup'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -53,6 +54,12 @@ const AuthenticatedStudioDesignIdRoute =
     path: '/$designId',
     getParentRoute: () => AuthenticatedStudioRoute,
   } as any)
+const ApiPublicMarketingCleanupRoute =
+  ApiPublicMarketingCleanupRouteImport.update({
+    id: '/api/public/marketing-cleanup',
+    path: '/api/public/marketing-cleanup',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -60,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/studio': typeof AuthenticatedStudioRouteWithChildren
   '/studio/$designId': typeof AuthenticatedStudioDesignIdRoute
+  '/api/public/marketing-cleanup': typeof ApiPublicMarketingCleanupRoute
   '/studio/': typeof AuthenticatedStudioIndexRoute
 }
 export interface FileRoutesByTo {
@@ -67,6 +75,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/studio/$designId': typeof AuthenticatedStudioDesignIdRoute
+  '/api/public/marketing-cleanup': typeof ApiPublicMarketingCleanupRoute
   '/studio': typeof AuthenticatedStudioIndexRoute
 }
 export interface FileRoutesById {
@@ -77,6 +86,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/studio': typeof AuthenticatedStudioRouteWithChildren
   '/_authenticated/studio/$designId': typeof AuthenticatedStudioDesignIdRoute
+  '/api/public/marketing-cleanup': typeof ApiPublicMarketingCleanupRoute
   '/_authenticated/studio/': typeof AuthenticatedStudioIndexRoute
 }
 export interface FileRouteTypes {
@@ -87,9 +97,16 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/studio'
     | '/studio/$designId'
+    | '/api/public/marketing-cleanup'
     | '/studio/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/reset-password' | '/studio/$designId' | '/studio'
+  to:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/studio/$designId'
+    | '/api/public/marketing-cleanup'
+    | '/studio'
   id:
     | '__root__'
     | '/'
@@ -98,6 +115,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/studio'
     | '/_authenticated/studio/$designId'
+    | '/api/public/marketing-cleanup'
     | '/_authenticated/studio/'
   fileRoutesById: FileRoutesById
 }
@@ -106,6 +124,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicMarketingCleanupRoute: typeof ApiPublicMarketingCleanupRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -159,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudioDesignIdRouteImport
       parentRoute: typeof AuthenticatedStudioRoute
     }
+    '/api/public/marketing-cleanup': {
+      id: '/api/public/marketing-cleanup'
+      path: '/api/public/marketing-cleanup'
+      fullPath: '/api/public/marketing-cleanup'
+      preLoaderRoute: typeof ApiPublicMarketingCleanupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -191,6 +217,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicMarketingCleanupRoute: ApiPublicMarketingCleanupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
