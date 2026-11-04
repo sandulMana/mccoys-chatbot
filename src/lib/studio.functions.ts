@@ -131,7 +131,7 @@ export const sendToMarketing = createServerFn({ method: "POST" })
       .from("designs").select("title").eq("id", data.designId).single();
     if (de || !design) throw new Error("Design not found");
     const { data: latest, error: le } = await supabase
-      .from("design_versions").select("version_number,image_path").eq("design_id", data.designId)
+      .from("design_versions").select("id,version_number,image_path,checks").eq("design_id", data.designId)
       .order("version_number", { ascending: false }).limit(1).maybeSingle();
     if (le) throw new Error(le.message);
     if (!latest) throw new Error("Generate a flyer before sending it to Marketing.");
@@ -156,6 +156,13 @@ export const sendToMarketing = createServerFn({ method: "POST" })
       imageUrl: link?.signedUrl,
       image: { filename: `mccoys-flyer-v${latest.version_number}.png`, bytes: pngBytes },
       psd: { filename: `mccoys-flyer-v${latest.version_number}.psd`, bytes: pngToPsd(pngBytes) },
+    });
+
+    const { submitMarketingSnapshot } = await import('./marketing.server');
+    await submitMarketingSnapshot(supabase, {
+      designId: data.designId, versionId: latest.id, userId: context.userId, email: senderEmail,
+      title: design.title, versionNumber: latest.version_number, png: pngBytes, checks: latest.checks,
+      neededBy: data.neededBy, uses: data.uses,
     });
 
     const { error } = await supabase
