@@ -123,6 +123,107 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_audit_events: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          notes: string
+          submission_id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          notes?: string
+          submission_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          notes?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_audit_events_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_submissions: {
+        Row: {
+          approved_at: string | null
+          change_categories: string[]
+          checks: Json
+          delete_at: string | null
+          design_id: string
+          id: string
+          needed_by: string
+          notes: string
+          png_path: string
+          psd_path: string | null
+          sender_email: string
+          status: string
+          submitted_at: string
+          submitted_by: string
+          title: string
+          updated_at: string
+          uses: string
+          version_id: string
+          version_number: number
+        }
+        Insert: {
+          approved_at?: string | null
+          change_categories?: string[]
+          checks?: Json
+          delete_at?: string | null
+          design_id: string
+          id?: string
+          needed_by?: string
+          notes?: string
+          png_path: string
+          psd_path?: string | null
+          sender_email: string
+          status?: string
+          submitted_at?: string
+          submitted_by: string
+          title: string
+          updated_at?: string
+          uses?: string
+          version_id: string
+          version_number: number
+        }
+        Update: {
+          approved_at?: string | null
+          change_categories?: string[]
+          checks?: Json
+          delete_at?: string | null
+          design_id?: string
+          id?: string
+          needed_by?: string
+          notes?: string
+          png_path?: string
+          psd_path?: string | null
+          sender_email?: string
+          status?: string
+          submitted_at?: string
+          submitted_by?: string
+          title?: string
+          updated_at?: string
+          uses?: string
+          version_id?: string
+          version_number?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
