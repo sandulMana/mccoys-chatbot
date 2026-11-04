@@ -13,7 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthenticatedMarketingRouteImport } from './routes/_authenticated/marketing'
 import { Route as AuthenticatedStudioRouteImport } from './routes/_authenticated/studio'
+import { Route as AuthenticatedMarketingIndexRouteImport } from './routes/_authenticated/marketing.index'
+import { Route as AuthenticatedMarketingSubmissionIdRouteImport } from './routes/_authenticated/marketing.$submissionId'
 import { Route as AuthenticatedStudioIndexRouteImport } from './routes/_authenticated/studio.index'
 import { Route as AuthenticatedStudioDesignIdRouteImport } from './routes/_authenticated/studio.$designId'
 import { Route as ApiPublicMarketingCleanupRouteImport } from './routes/api/public/marketing-cleanup'
@@ -37,11 +40,28 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedMarketingRoute = AuthenticatedMarketingRouteImport.update({
+  id: '/marketing',
+  path: '/marketing',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedStudioRoute = AuthenticatedStudioRouteImport.update({
   id: '/studio',
   path: '/studio',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMarketingIndexRoute =
+  AuthenticatedMarketingIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedMarketingRoute,
+  } as any)
+const AuthenticatedMarketingSubmissionIdRoute =
+  AuthenticatedMarketingSubmissionIdRouteImport.update({
+    id: '/$submissionId',
+    path: '/$submissionId',
+    getParentRoute: () => AuthenticatedMarketingRoute,
+  } as any)
 const AuthenticatedStudioIndexRoute =
   AuthenticatedStudioIndexRouteImport.update({
     id: '/',
@@ -65,17 +85,22 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/marketing': typeof AuthenticatedMarketingRouteWithChildren
   '/studio': typeof AuthenticatedStudioRouteWithChildren
+  '/marketing/$submissionId': typeof AuthenticatedMarketingSubmissionIdRoute
   '/studio/$designId': typeof AuthenticatedStudioDesignIdRoute
   '/api/public/marketing-cleanup': typeof ApiPublicMarketingCleanupRoute
+  '/marketing/': typeof AuthenticatedMarketingIndexRoute
   '/studio/': typeof AuthenticatedStudioIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/marketing/$submissionId': typeof AuthenticatedMarketingSubmissionIdRoute
   '/studio/$designId': typeof AuthenticatedStudioDesignIdRoute
   '/api/public/marketing-cleanup': typeof ApiPublicMarketingCleanupRoute
+  '/marketing': typeof AuthenticatedMarketingIndexRoute
   '/studio': typeof AuthenticatedStudioIndexRoute
 }
 export interface FileRoutesById {
@@ -84,9 +109,12 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/marketing': typeof AuthenticatedMarketingRouteWithChildren
   '/_authenticated/studio': typeof AuthenticatedStudioRouteWithChildren
+  '/_authenticated/marketing/$submissionId': typeof AuthenticatedMarketingSubmissionIdRoute
   '/_authenticated/studio/$designId': typeof AuthenticatedStudioDesignIdRoute
   '/api/public/marketing-cleanup': typeof ApiPublicMarketingCleanupRoute
+  '/_authenticated/marketing/': typeof AuthenticatedMarketingIndexRoute
   '/_authenticated/studio/': typeof AuthenticatedStudioIndexRoute
 }
 export interface FileRouteTypes {
@@ -95,17 +123,22 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/marketing'
     | '/studio'
+    | '/marketing/$submissionId'
     | '/studio/$designId'
     | '/api/public/marketing-cleanup'
+    | '/marketing/'
     | '/studio/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/marketing/$submissionId'
     | '/studio/$designId'
     | '/api/public/marketing-cleanup'
+    | '/marketing'
     | '/studio'
   id:
     | '__root__'
@@ -113,9 +146,12 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
+    | '/_authenticated/marketing'
     | '/_authenticated/studio'
+    | '/_authenticated/marketing/$submissionId'
     | '/_authenticated/studio/$designId'
     | '/api/public/marketing-cleanup'
+    | '/_authenticated/marketing/'
     | '/_authenticated/studio/'
   fileRoutesById: FileRoutesById
 }
@@ -157,12 +193,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/marketing': {
+      id: '/_authenticated/marketing'
+      path: '/marketing'
+      fullPath: '/marketing'
+      preLoaderRoute: typeof AuthenticatedMarketingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/studio': {
       id: '/_authenticated/studio'
       path: '/studio'
       fullPath: '/studio'
       preLoaderRoute: typeof AuthenticatedStudioRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketing/': {
+      id: '/_authenticated/marketing/'
+      path: '/'
+      fullPath: '/marketing/'
+      preLoaderRoute: typeof AuthenticatedMarketingIndexRouteImport
+      parentRoute: typeof AuthenticatedMarketingRoute
+    }
+    '/_authenticated/marketing/$submissionId': {
+      id: '/_authenticated/marketing/$submissionId'
+      path: '/$submissionId'
+      fullPath: '/marketing/$submissionId'
+      preLoaderRoute: typeof AuthenticatedMarketingSubmissionIdRouteImport
+      parentRoute: typeof AuthenticatedMarketingRoute
     }
     '/_authenticated/studio/': {
       id: '/_authenticated/studio/'
@@ -188,6 +245,23 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedMarketingRouteChildren {
+  AuthenticatedMarketingSubmissionIdRoute: typeof AuthenticatedMarketingSubmissionIdRoute
+  AuthenticatedMarketingIndexRoute: typeof AuthenticatedMarketingIndexRoute
+}
+
+const AuthenticatedMarketingRouteChildren: AuthenticatedMarketingRouteChildren =
+  {
+    AuthenticatedMarketingSubmissionIdRoute:
+      AuthenticatedMarketingSubmissionIdRoute,
+    AuthenticatedMarketingIndexRoute: AuthenticatedMarketingIndexRoute,
+  }
+
+const AuthenticatedMarketingRouteWithChildren =
+  AuthenticatedMarketingRoute._addFileChildren(
+    AuthenticatedMarketingRouteChildren,
+  )
+
 interface AuthenticatedStudioRouteChildren {
   AuthenticatedStudioDesignIdRoute: typeof AuthenticatedStudioDesignIdRoute
   AuthenticatedStudioIndexRoute: typeof AuthenticatedStudioIndexRoute
@@ -202,10 +276,12 @@ const AuthenticatedStudioRouteWithChildren =
   AuthenticatedStudioRoute._addFileChildren(AuthenticatedStudioRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedMarketingRoute: typeof AuthenticatedMarketingRouteWithChildren
   AuthenticatedStudioRoute: typeof AuthenticatedStudioRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedMarketingRoute: AuthenticatedMarketingRouteWithChildren,
   AuthenticatedStudioRoute: AuthenticatedStudioRouteWithChildren,
 }
 
