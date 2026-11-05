@@ -24,7 +24,7 @@ export const getMarketingAudit = createServerFn({ method: 'GET' }).middleware([r
   });
 
 export const reviewMarketing = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
-  .inputValidator((input: { ids: string[]; action: 'approved' | 'needs_changes' | 'archived' | 'delete'; notes?: string; categories?: string[] }) => z.object({ ids: z.array(z.string().uuid()).min(1).max(100), action: z.enum(['approved','needs_changes','archived','delete']), notes: z.string().max(2000).default(''), categories: z.array(z.string().max(50)).max(6).default([]) }).parse(input))
+  .inputValidator((input: { ids: string[]; action: 'approved' | 'needs_changes' | 'delete'; notes?: string; categories?: string[] }) => z.object({ ids: z.array(z.string().uuid()).min(1).max(100), action: z.enum(['approved','needs_changes','delete']), notes: z.string().max(2000).default(''), categories: z.array(z.string().max(50)).max(6).default([]) }).parse(input))
   .handler(async ({ context, data }) => {
     for (const id of data.ids) {
       const { data: row, error } = await context.supabase.from('marketing_submissions').select('*').eq('id', id).single();
