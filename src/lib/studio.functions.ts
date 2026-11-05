@@ -3,7 +3,6 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export const MARKETING_EMAIL = "sandeemanage@gmail.com";
 
 async function signed(supabase: any, path: string) {
   const { data } = await supabase.storage.from("flyers").createSignedUrl(path, 60 * 60);
@@ -122,10 +121,7 @@ export const sendToMarketing = createServerFn({ method: "POST" })
     z.object({ designId: z.string().uuid(), neededBy: z.string().max(40), uses: z.string().max(200) }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, claims } = context;
-    const apiKey = process.env["RESEND_API_KEY"];
-    if (!apiKey) throw new Error("Email is not configured.");
-    const senderEmail = claims.email as string | undefined;
-    if (!senderEmail) throw new Error("Your account has no email address.");
+    const senderEmail = (claims.email as string | undefined) ?? "";
 
     const { data: design, error: de } = await supabase
       .from("designs").select("title").eq("id", data.designId).single();
@@ -139,24 +135,6 @@ export const sendToMarketing = createServerFn({ method: "POST" })
     const file = await supabase.storage.from("flyers").download(latest.image_path);
     if (file.error) throw new Error(file.error.message);
     const pngBytes = new Uint8Array(await file.data.arrayBuffer());
-    const { data: link } = await supabase.storage
-      .from("flyers").createSignedUrl(latest.image_path, 60 * 60 * 24 * 7);
-
-    // Email first, so a delivery failure leaves the design unsent and retryable.
-    const { sendMarketingEmail } = await import("./email.server");
-    const { pngToPsd } = await import("./psd.server");
-    await sendMarketingEmail({
-      apiKey,
-      to: MARKETING_EMAIL,
-      senderEmail,
-      designTitle: design.title,
-      versionNumber: latest.version_number,
-      neededBy: data.neededBy,
-      uses: data.uses,
-      imageUrl: link?.signedUrl,
-      image: { filename: `mccoys-flyer-v${latest.version_number}.png`, bytes: pngBytes },
-      psd: { filename: `mccoys-flyer-v${latest.version_number}.psd`, bytes: pngToPsd(pngBytes) },
-    });
 
     const { submitMarketingSnapshot } = await import('./marketing.server');
     await submitMarketingSnapshot(supabase, {
@@ -170,5 +148,5 @@ export const sendToMarketing = createServerFn({ method: "POST" })
       .update({ status: "sent", sent_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq("id", data.designId);
     if (error) throw new Error(error.message);
-    return { ok: true, to: MARKETING_EMAIL, emailed: true };
+    return { ok: true };
   });

@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, Check, CheckCircle2, Download, Loader2 } from "lucide-react";
-import { addPrompt, generateVersion, getDesign, sendToMarketing, MARKETING_EMAIL } from "@/lib/studio.functions";
+import { addPrompt, generateVersion, getDesign, sendToMarketing } from "@/lib/studio.functions";
 import { Composer } from "@/components/Composer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -185,7 +185,7 @@ function DesignPage() {
               <div>
                 <div className="font-semibold">Flyer v{latest?.version_number} sent to McCoy's Marketing Team</div>
                 <div className="text-sm text-muted-foreground">
-                  {new Date(design.sent_at).toLocaleString()} · {MARKETING_EMAIL}
+                  {new Date(design.sent_at).toLocaleString()} · Marketing dashboard
                 </div>
               </div>
             </div>
@@ -285,7 +285,7 @@ function DesignPage() {
             <DialogTitle className="text-3xl text-primary">Send v{latest?.version_number} to Marketing</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            This locks the version and sends it to {MARKETING_EMAIL}.
+            This locks the version and sends it to the Marketing review dashboard.
           </p>
           <div className="space-y-3">
             <div className="space-y-1">
