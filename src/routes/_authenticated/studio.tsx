@@ -66,14 +66,14 @@ function StudioLayout() {
             to="/studio"
             className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-sidebar-primary py-2.5 font-semibold text-sidebar-primary-foreground transition hover:brightness-95"
           >
-            <Plus className="h-4 w-4" /> New design
+            <Plus className="h-4 w-4" /> New Design
           </Link>
           <label className="mt-3 flex items-center gap-2 rounded-lg bg-sidebar-muted px-3 py-2 text-sm">
             <Search className="h-4 w-4 opacity-70" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search designs"
+              placeholder="Search Designs"
               className="w-full bg-transparent outline-none placeholder:text-sidebar-foreground/60"
             />
           </label>
@@ -101,7 +101,7 @@ function StudioLayout() {
             </div>
           ))}
         </nav>
-        <div className="px-3 pb-3"><Button asChild variant="ghost" className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"><Link to="/marketing" search={{ folder: 'inbox' }}><Inbox /> Marketing review</Link></Button></div>
+        <div className="px-3 pb-3"><Button asChild variant="ghost" className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"><Link to="/marketing" search={{ folder: 'inbox' }}><Inbox /> Marketing Review</Link></Button></div>
         <div className="flex items-center gap-3 border-t border-sidebar-border p-4">
           <div className="grid h-10 w-10 place-items-center rounded-full bg-sidebar-primary font-bold text-sidebar-primary-foreground">
             {initials}

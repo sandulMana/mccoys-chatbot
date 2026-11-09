@@ -4,7 +4,7 @@ export function BrandKit() {
   return (
     <div className="rounded-xl border bg-card p-5">
       <div className="flex items-center justify-between">
-        <h3 className="font-sans text-base font-semibold tracking-normal">McCoy's brand kit</h3>
+        <h3 className="font-sans text-base font-semibold tracking-normal">McCoy's Brand Kit</h3>
         <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-bold tracking-wider text-secondary-foreground">
           LOCKED BY MARKETING
         </span>

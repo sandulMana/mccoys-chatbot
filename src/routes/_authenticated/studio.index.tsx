@@ -20,10 +20,10 @@ export const Route = createFileRoute("/_authenticated/studio/")({
 });
 
 const IDEAS = [
-  { t: "Sale flyer", p: "20% off cedar pickets this weekend at our Round Rock store" },
-  { t: "Event announcement", p: "Contractor Night — free breakfast tacos, Thursday 6:30am" },
-  { t: "Now hiring poster", p: "Hiring yard crew and drivers, apply at the service desk" },
-  { t: "Store hours notice", p: "Holiday hours for Thanksgiving week" },
+  { t: "Sale Flyer", p: "20% off cedar pickets this weekend at our Round Rock store" },
+  { t: "Event Announcement", p: "Contractor Night — free breakfast tacos, Thursday 6:30am" },
+  { t: "Now Hiring Poster", p: "Hiring yard crew and drivers, apply at the service desk" },
+  { t: "Store Hours Notice", p: "Holiday hours for Thanksgiving week" },
 ];
 
 function NewDesign() {
