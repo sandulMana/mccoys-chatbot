@@ -15,6 +15,20 @@
       "when": 1793834691457,
       "tag": "0001_marketing_review",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794261470371,
+      "tag": "0002_add_flagged_to_designs",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794261484732,
+      "tag": "0003_own_flyer_files_delete",
+      "breakpoints": true
     }
   ]
 }

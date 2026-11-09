@@ -1,11 +1,31 @@
-import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useParams } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { Inbox, LogOut, Plus, Search } from "lucide-react";
+import { Flag, Inbox, LogOut, MoreHorizontal, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { supabase } from "@/integrations/supabase/client";
-import { listDesigns } from "@/lib/studio.functions";
+import { deleteDesign, listDesigns, renameDesign, setDesignFlag } from "@/lib/studio.functions";
+
+type DesignItem = {
+  id: string;
+  title: string;
+  status: string;
+  flagged: boolean;
+  updated_at: string;
+  versions: number;
+};
 
 export const Route = createFileRoute("/_authenticated/studio")({
   head: () => ({
@@ -33,10 +53,51 @@ function ago(iso: string) {
 function StudioLayout() {
   const { user } = Route.useRouteContext();
   const fetchDesigns = useServerFn(listDesigns);
+  const callRename = useServerFn(renameDesign);
+  const callFlag = useServerFn(setDesignFlag);
+  const callDelete = useServerFn(deleteDesign);
   const { data: designs = [] } = useQuery({ queryKey: ["designs"], queryFn: () => fetchDesigns() });
   const [q, setQ] = useState("");
+  const [renaming, setRenaming] = useState<DesignItem | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [deleting, setDeleting] = useState<DesignItem | null>(null);
+  const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const activeDesignId = useParams({ strict: false, select: (p) => (p as { designId?: string }).designId });
+
+  const refresh = () => qc.invalidateQueries({ queryKey: ["designs"] });
+
+  async function submitRename() {
+    if (!renaming || !renameValue.trim()) return;
+    setBusy(true);
+    try {
+      await callRename({ data: { designId: renaming.id, title: renameValue.trim() } });
+      setRenaming(null);
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function toggleFlag(d: DesignItem) {
+    await callFlag({ data: { designId: d.id, flagged: !d.flagged } });
+    await refresh();
+  }
+
+  async function confirmDelete() {
+    if (!deleting) return;
+    setBusy(true);
+    try {
+      await callDelete({ data: { designId: deleting.id } });
+      const wasActive = activeDesignId === deleting.id;
+      setDeleting(null);
+      await refresh();
+      if (wasActive) navigate({ to: "/studio" });
+    } finally {
+      setBusy(false);
+    }
+  }
   const name = (user.user_metadata?.['full_name'] as string) || user.email || "Manager";
   const initials = name.split(/[\s@]/).filter(Boolean).slice(0, 2).map((s) => s[0]!.toUpperCase()).join("");
 
@@ -84,19 +145,44 @@ function StudioLayout() {
             <div key={g.label} className="mb-4">
               <div className="px-2 pb-1 text-xs font-semibold tracking-widest opacity-70 uppercase">{g.label}</div>
               {g.items.map((d) => (
-                <Link
-                  key={d.id}
-                  to="/studio/$designId"
-                  params={{ designId: d.id }}
-                  className="block rounded-lg border-l-4 border-transparent px-3 py-2 hover:bg-sidebar-accent"
-                  activeProps={{ className: "bg-sidebar-accent border-sidebar-primary" }}
-                >
-                  <div className="truncate font-medium">{d.title}</div>
-                  <div className="text-xs opacity-70">
-                    {d.status === "sent" ? "Sent to Marketing" : "Draft"}
-                    {d.versions ? ` · v${d.versions}` : ""} · {ago(d.updated_at)}
-                  </div>
-                </Link>
+                <div key={d.id} className="group relative">
+                  <Link
+                    to="/studio/$designId"
+                    params={{ designId: d.id }}
+                    className="block rounded-lg border-l-4 border-transparent px-3 py-2 pr-8 hover:bg-sidebar-accent"
+                    activeProps={{ className: "bg-sidebar-accent border-sidebar-primary" }}
+                  >
+                    <div className="flex items-center gap-1.5 truncate font-medium">
+                      {d.flagged && <Flag className="h-3.5 w-3.5 shrink-0 fill-sidebar-primary text-sidebar-primary" />}
+                      <span className="truncate">{d.title}</span>
+                    </div>
+                    <div className="text-xs opacity-70">
+                      {d.status === "sent" ? "Sent to Marketing" : "Draft"}
+                      {d.versions ? ` · v${d.versions}` : ""} · {ago(d.updated_at)}
+                    </div>
+                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        aria-label={`Options for ${d.title}`}
+                        className="absolute top-2 right-1.5 rounded p-1 opacity-0 transition group-hover:opacity-100 hover:bg-sidebar-accent focus:opacity-100 data-[state=open]:opacity-100"
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" side="right">
+                      <DropdownMenuItem onSelect={() => { setRenaming(d); setRenameValue(d.title); }}>
+                        <Pencil className="h-4 w-4" /> Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => toggleFlag(d)}>
+                        <Flag className="h-4 w-4" /> {d.flagged ? "Unflag" : "Flag"}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setDeleting(d)}>
+                        <Trash2 className="h-4 w-4" /> Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               ))}
             </div>
           ))}
@@ -118,6 +204,51 @@ function StudioLayout() {
       <main className="flex min-w-0 flex-1">
         <Outlet />
       </main>
+
+      <Dialog open={!!renaming} onOpenChange={(open) => !open && setRenaming(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Design</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => { e.preventDefault(); void submitRename(); }}
+            className="space-y-4"
+          >
+            <Input
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              placeholder="Design name"
+              maxLength={120}
+              autoFocus
+            />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setRenaming(null)}>Cancel</Button>
+              <Button type="submit" disabled={busy || !renameValue.trim()}>Save</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleting} onOpenChange={(open) => !open && setDeleting(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete “{deleting?.title}”?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes the chat, its flyer versions, and files. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); void confirmDelete(); }}
+              disabled={busy}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

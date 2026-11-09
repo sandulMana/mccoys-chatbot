@@ -14,16 +14,62 @@ export const listDesigns = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("designs")
-      .select("id,title,status,updated_at,design_versions(count)")
+      .select("id,title,status,flagged,updated_at,design_versions(count)")
+      .order("flagged", { ascending: false })
       .order("updated_at", { ascending: false });
     if (error) throw new Error(error.message);
     return (data ?? []).map((d: any) => ({
       id: d.id as string,
       title: d.title as string,
       status: d.status as string,
+      flagged: d.flagged as boolean,
       updated_at: d.updated_at as string,
       versions: (d.design_versions?.[0]?.count as number) ?? 0,
     }));
+  });
+
+export const renameDesign = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { designId: string; title: string }) =>
+    z.object({ designId: z.string().uuid(), title: z.string().trim().min(1).max(120) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("designs")
+      .update({ title: data.title, updated_at: new Date().toISOString() })
+      .eq("id", data.designId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const setDesignFlag = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { designId: string; flagged: boolean }) =>
+    z.object({ designId: z.string().uuid(), flagged: z.boolean() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("designs")
+      .update({ flagged: data.flagged })
+      .eq("id", data.designId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteDesign = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { designId: string }) => z.object({ designId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: versions } = await supabase
+      .from("design_versions").select("image_path").eq("design_id", data.designId);
+    const paths = (versions ?? []).map((v: any) => v.image_path as string).filter(Boolean);
+    if (paths.length) await supabase.storage.from("flyers").remove(paths);
+    const { error: me } = await supabase.from("design_messages").delete().eq("design_id", data.designId);
+    if (me) throw new Error(me.message);
+    const { error: ve } = await supabase.from("design_versions").delete().eq("design_id", data.designId);
+    if (ve) throw new Error(ve.message);
+    const { error } = await supabase.from("designs").delete().eq("id", data.designId).eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 export const getDesign = createServerFn({ method: "GET" })

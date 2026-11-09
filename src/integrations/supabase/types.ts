@@ -96,6 +96,7 @@ export type Database = {
       designs: {
         Row: {
           created_at: string
+          flagged: boolean
           id: string
           sent_at: string | null
           status: string
@@ -105,6 +106,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          flagged?: boolean
           id?: string
           sent_at?: string | null
           status?: string
@@ -114,6 +116,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          flagged?: boolean
           id?: string
           sent_at?: string | null
           status?: string
