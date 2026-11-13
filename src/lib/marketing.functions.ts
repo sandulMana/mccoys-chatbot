@@ -77,8 +77,8 @@ export const uploadMarketingRevision = createServerFn({ method: 'POST' }).middle
       const { error: uploadError } = await context.supabase.storage.from('flyers').upload(paths[kind], file, { contentType: kind === 'png' ? 'image/png' : 'image/vnd.adobe.photoshop' });
       if (uploadError) throw new Error(uploadError.message);
     }
-    const { error: updateError } = await context.supabase.from('marketing_submissions').update({ png_path: paths.png, psd_path: paths.psd, version_number: row.version_number + 1, status: 'approved', checks: [] }).eq('id', id);
+    const { error: updateError } = await context.supabase.from('marketing_submissions').update({ png_path: paths.png, psd_path: paths.psd, version_number: row.version_number + 1, checks: [] }).eq('id', id);
     if (updateError) throw new Error(updateError.message);
-    await context.supabase.from('marketing_audit_events').insert({ submission_id: id, actor_id: context.userId, action: 'edited version uploaded and approved' });
+    await context.supabase.from('marketing_audit_events').insert({ submission_id: id, actor_id: context.userId, action: 'edited version uploaded' });
     return { ok: true };
   });
