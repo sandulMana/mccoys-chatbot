@@ -82,7 +82,7 @@ export const uploadMarketingRevision = createServerFn({ method: 'POST' }).middle
     return { ok: true };
   });
 export const listManagerInbox = createServerFn({ method: 'GET' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
-  const { data, error } = await context.supabase.from('marketing_submissions').select('*').eq('submitted_by', context.userId).eq('status', 'approved').order('approved_at', { ascending: false });
+  const { data, error } = await context.supabase.from('marketing_submissions').select('*').eq('status', 'approved').order('approved_at', { ascending: false });
   if (error) throw new Error(error.message);
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
   const items = await Promise.all((data ?? []).map(async (row) => {
@@ -95,7 +95,7 @@ export const listManagerInbox = createServerFn({ method: 'GET' }).middleware([re
 export const markInboxSeen = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator((input: { ids: string[] }) => z.object({ ids: z.array(z.string().uuid()).min(1).max(100) }).parse(input))
   .handler(async ({ context, data }) => {
-    const { error } = await context.supabase.from('marketing_submissions').update({ manager_seen_at: new Date().toISOString() }).in('id', data.ids).eq('submitted_by', context.userId).is('manager_seen_at', null);
+    const { error } = await context.supabase.from('marketing_submissions').update({ manager_seen_at: new Date().toISOString() }).in('id', data.ids).is('manager_seen_at', null);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
