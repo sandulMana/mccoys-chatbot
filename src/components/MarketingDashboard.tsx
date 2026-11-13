@@ -67,8 +67,8 @@ export function MarketingDashboard({ folder = 'inbox', designId }: { folder?: Fo
   }
   const upload = useMutation({
     mutationFn: async () => {
-      if (!uploadId || !psd) throw new Error('Select the Photoshop file.');
-      const form = new FormData(); form.set('id', uploadId); form.set('psd', psd);
+      if (!uploadId || !psd) throw new Error('Select a PNG or PDF file.');
+      const form = new FormData(); form.set('id', uploadId); form.set('png', await toPng(psd));
       return uploadFn({ data: form });
     },
     onSuccess: () => { setUploadId(null); setPsd(null); qc.invalidateQueries({ queryKey: ['marketing'] }); qc.invalidateQueries({ queryKey: ['marketing-audit'] }); toast.success('Edited version uploaded. Review it, then click Approve.'); },
@@ -111,7 +111,7 @@ export function MarketingDashboard({ folder = 'inbox', designId }: { folder?: Fo
     </main>
     <Dialog open={flagIds.length > 0} onOpenChange={open => !open && setFlagIds([])}><DialogContent className="max-w-md"><DialogHeader><DialogTitle className="flex items-center gap-3 text-3xl text-primary"><Flag /> Flag: needs changes</DialogTitle></DialogHeader><p className="text-sm text-muted-foreground">{flagIds.length === 1 ? submissions.find(r => r.id === flagIds[0])?.title : `${flagIds.length} designs`}</p><div><p className="mb-2 text-sm font-semibold">What needs to change?</p><div className="flex flex-wrap gap-2">{CHANGE_CATEGORIES.map(category => <Button key={category} size="sm" variant={categories.includes(category) ? 'secondary' : 'outline'} aria-pressed={categories.includes(category)} onClick={() => setCategories(previous => previous.includes(category) ? previous.filter(c => c !== category) : [...previous, category])}>{categories.includes(category) && <Check />}{category}</Button>)}</div></div><label className="space-y-2 text-sm font-semibold">Notes for the team<Textarea className="mt-2 min-h-24 font-normal" value={notes} onChange={e => setNotes(e.target.value)} maxLength={2000} /></label><DialogFooter><Button variant="outline" onClick={() => setFlagIds([])}>Cancel</Button><Button disabled={decision.isPending || (!categories.length && !notes.trim())} onClick={() => decision.mutate({ data: { ids: flagIds, action: 'needs_changes', categories, notes } })}><Flag /> Move to Needs changes</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={deleteIds.length > 0} onOpenChange={open => !open && setDeleteIds([])}><DialogContent><DialogHeader><DialogTitle className="text-3xl text-primary">Delete permanently?</DialogTitle></DialogHeader><p className="text-sm">This removes {deleteIds.length} submission(s), their review history, and the team's files. This cannot be undone. The manager's original studio design is kept.</p><DialogFooter><Button variant="outline" onClick={() => setDeleteIds([])}>Cancel</Button><Button variant="destructive" disabled={decision.isPending} onClick={() => decision.mutate({ data: { ids: deleteIds, action: 'delete' } })}><Trash2 /> Delete now</Button></DialogFooter></DialogContent></Dialog>
-    <Dialog open={Boolean(uploadId)} onOpenChange={open => !open && setUploadId(null)}><DialogContent><DialogHeader><DialogTitle className="text-3xl text-primary">Upload edited version</DialogTitle></DialogHeader><p className="text-sm text-muted-foreground">Upload the edited Photoshop file. A preview is made from it automatically. Then review it and click Approve.</p><label className="space-y-2 text-sm font-semibold">Photoshop file<Input type="file" aria-label="Photoshop file" accept=".psd" onChange={e => setPsd(e.target.files?.[0] ?? null)} /></label><DialogFooter><Button variant="outline" onClick={() => setUploadId(null)}>Cancel</Button><Button disabled={!psd || upload.isPending} onClick={() => upload.mutate()}><Upload /> Upload edited version</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog open={Boolean(uploadId)} onOpenChange={open => !open && setUploadId(null)}><DialogContent><DialogHeader><DialogTitle className="text-3xl text-primary">Upload edited version</DialogTitle></DialogHeader><p className="text-sm text-muted-foreground">Upload the edited design as a PNG or PDF (first page is used). A Photoshop copy is made automatically. Then review it and click Approve.</p><label className="space-y-2 text-sm font-semibold">Edited design (PNG or PDF)<Input type="file" aria-label="Edited design" accept=".png,.pdf,image/png,application/pdf" onChange={e => setPsd(e.target.files?.[0] ?? null)} /></label><DialogFooter><Button variant="outline" onClick={() => setUploadId(null)}>Cancel</Button><Button disabled={!psd || upload.isPending} onClick={() => upload.mutate()}><Upload /> Upload edited version</Button></DialogFooter></DialogContent></Dialog>
   </div>;
 }
 function Status({ row }: { row: Submission }) {
@@ -120,4 +120,17 @@ function Status({ row }: { row: Submission }) {
 function checks(row: Submission): { label: string; detail: string; passed: boolean }[] {
   if (!Array.isArray(row.checks)) return [];
   return row.checks.flatMap(c => c && typeof c === 'object' && !Array.isArray(c) && typeof c['label'] === 'string' ? [{ label: c['label'], detail: typeof c['detail'] === 'string' ? c['detail'] : '', passed: c['passed'] === true }] : []);
+}
+async function toPng(file: File): Promise<Blob> {
+  if (file.type === 'image/png' || file.name.toLowerCase().endsWith('.png')) return file;
+  if (!(file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))) throw new Error('Select a PNG or PDF file.');
+  const pdfjs = await import('pdfjs-dist');
+  pdfjs.GlobalWorkerOptions.workerSrc = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
+  const doc = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+  const page = await doc.getPage(1);
+  const base = page.getViewport({ scale: 1 });
+  const viewport = page.getViewport({ scale: Math.min(4, 2400 / Math.max(base.width, base.height)) });
+  const canvas = document.createElement('canvas'); canvas.width = Math.round(viewport.width); canvas.height = Math.round(viewport.height);
+  await page.render({ canvas, canvasContext: canvas.getContext('2d')!, viewport }).promise;
+  return new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error('Could not read the PDF.')), 'image/png'));
 }

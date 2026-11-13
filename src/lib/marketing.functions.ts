@@ -64,13 +64,12 @@ export const uploadMarketingRevision = createServerFn({ method: 'POST' }).middle
     const id = z.string().uuid().parse(data.get('id'));
     const { data: row, error } = await context.supabase.from('marketing_submissions').select('*').eq('id', id).single();
     if (error || !row) throw new Error('Submission not found.');
-    const psdFile = data.get('psd');
-    if (!(psdFile instanceof File)) throw new Error('Select the edited Photoshop PSD.');
-    const psdBytes = new Uint8Array(await psdFile.arrayBuffer());
-    validateReviewFile(psdBytes, 'psd');
-    const { psdToPng } = await import('./psd.server');
-    const pngBytes = psdToPng(psdBytes);
+    const pngFile = data.get('png');
+    if (!(pngFile instanceof Blob)) throw new Error('Select a PNG or PDF file.');
+    const pngBytes = new Uint8Array(await pngFile.arrayBuffer());
     validateReviewFile(pngBytes, 'png');
+    const { pngToPsd } = await import('./psd.server');
+    const psdBytes = pngToPsd(pngBytes);
     const paths: Record<'png' | 'psd', string> = { png: '', psd: '' };
     for (const [kind, bytes] of [['png', pngBytes], ['psd', psdBytes]] as const) {
       paths[kind] = `marketing/${context.userId}/${id}/${crypto.randomUUID()}.${kind}`;
