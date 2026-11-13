@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { useEffect, useState } from 'react';
-import { CheckCircle2, Clock, Download, ExternalLink, Loader2 } from 'lucide-react';
+import { CheckCircle2, Clock, Download, FileText, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { downloadMarketing, listManagerInbox, markInboxSeen } from '@/lib/marketing.functions';
@@ -28,11 +28,11 @@ function ApprovedInbox() {
   const unseenIds = (data?.items ?? []).filter((row) => !row.manager_seen_at).map((row) => row.id).join(',');
   useEffect(() => { if (unseenIds) seen.mutate(unseenIds.split(',')); }, [unseenIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function download(id: string, kind: 'png' | 'psd') {
+  async function download(id: string, kind: 'png' | 'pdf') {
     setBusyId(id + kind);
     try {
       const file = await downloadFn({ data: { id, kind } });
-      saveBase64File(file.base64, file.filename, kind === 'png' ? 'image/png' : 'image/vnd.adobe.photoshop');
+      saveBase64File(file.base64, file.filename, kind === 'png' ? 'image/png' : 'application/pdf');
     } catch (e) { toast.error(e instanceof Error ? e.message : 'Download failed.'); }
     finally { setBusyId(null); }
   }
@@ -50,7 +50,7 @@ function ApprovedInbox() {
           <div className="flex items-start justify-between gap-2"><p className="truncate text-sm font-semibold">{row.title}</p>{!row.manager_seen_at && <span className="rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold uppercase text-secondary-foreground">New</span>}</div>
           <p className="text-xs text-muted-foreground">v{row.version_number} · Approved {row.approved_at ? new Date(row.approved_at).toLocaleDateString() : ''}{row.delete_at ? ` · Deletes in ${daysRemaining(row.delete_at)} days` : ''}</p>
           {row.notes && <p className="whitespace-pre-wrap border-l-2 border-secondary pl-2 text-xs">{row.notes}</p>}
-          <div className="grid grid-cols-2 gap-2"><Button size="sm" disabled={busyId !== null} onClick={() => download(row.id, 'png')}><Download /> PNG</Button><Button size="sm" variant="outline" disabled={busyId !== null} onClick={() => download(row.id, 'psd')}><ExternalLink /> PSD</Button></div>
+          <div className="grid grid-cols-2 gap-2"><Button size="sm" disabled={busyId !== null} onClick={() => download(row.id, 'png')}><Download /> PNG</Button><Button size="sm" variant="outline" disabled={busyId !== null} onClick={() => download(row.id, 'pdf')}><FileText /> PDF</Button></div>
         </div>
       </article>)}</div>}
   </section>;

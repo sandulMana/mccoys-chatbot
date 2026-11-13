@@ -43,17 +43,18 @@ export const reviewMarketing = createServerFn({ method: 'POST' }).middleware([re
   });
 
 export const downloadMarketing = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string; kind: 'png' | 'psd' }) => z.object({ id: z.string().uuid(), kind: z.enum(['png','psd']) }).parse(input))
+  .inputValidator((input: { id: string; kind: 'png' | 'psd' | 'pdf' }) => z.object({ id: z.string().uuid(), kind: z.enum(['png','psd','pdf']) }).parse(input))
   .handler(async ({ context, data }) => {
     const { data: row, error } = await context.supabase.from('marketing_submissions').select('*').eq('id', data.id).single();
     if (error || !row) throw new Error('Submission not found.');
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
-    const path = data.kind === 'psd' ? row.psd_path : row.png_path;
+    const path = data.kind === 'psd' ? row.psd_path : row.png_path; // PDFs are generated from the PNG
     let bytes: Uint8Array;
     const file = await supabaseAdmin.storage.from('flyers').download(path ?? row.png_path);
     if (file.error) throw new Error(file.error.message);
     bytes = new Uint8Array(await file.data.arrayBuffer());
     if (!path && data.kind === 'psd') { const { pngToPsd } = await import('./psd.server'); bytes = pngToPsd(bytes); }
+    if (data.kind === 'pdf') { const { pngToPdf } = await import('./pdf.server'); bytes = await pngToPdf(bytes); }
     const { Buffer } = await import('node:buffer');
     return { base64: Buffer.from(bytes).toString('base64'), filename: `${row.title.replace(/[^a-z0-9-]/gi, '-')}-v${row.version_number}.${data.kind}` };
   });
