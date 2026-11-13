@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { listMarketing, reviewMarketing, downloadMarketing, uploadMarketingRevision, getMarketingAudit } from '@/lib/marketing.functions';
+import { saveBase64File } from '@/lib/download-file';
 import { CHANGE_CATEGORIES, daysRemaining } from '@/lib/marketing-rules';
 
 type Folder = 'inbox' | 'approved' | 'needs_changes';
@@ -56,10 +57,7 @@ export function MarketingDashboard({ folder = 'inbox', designId }: { folder?: Fo
     try {
       for (const id of ids) {
         const file = await downloadFn({ data: { id, kind } });
-        const bytes = Uint8Array.from(atob(file.base64), c => c.charCodeAt(0));
-        const url = URL.createObjectURL(new Blob([bytes], { type: kind === 'png' ? 'image/png' : 'image/vnd.adobe.photoshop' }));
-        const anchor = document.createElement('a'); anchor.href = url; anchor.download = file.filename; anchor.click();
-        setTimeout(() => URL.revokeObjectURL(url), 10000);
+        saveBase64File(file.base64, file.filename, kind === 'png' ? 'image/png' : 'image/vnd.adobe.photoshop');
       }
       if (kind === 'psd') toast.success('Photoshop file downloaded. Open it in Photoshop on your computer.');
     } catch (e) { toast.error(e instanceof Error ? e.message : 'Download failed.'); }

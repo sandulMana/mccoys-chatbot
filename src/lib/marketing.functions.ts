@@ -33,7 +33,7 @@ export const reviewMarketing = createServerFn({ method: 'POST' }).middleware([re
         const { purgeMarketingSubmission } = await import('./marketing-cleanup.server');
         await purgeMarketingSubmission(row.id);
       } else {
-        const { error: updateError } = await context.supabase.from('marketing_submissions').update({ status: data.action, notes: data.notes, change_categories: data.categories }).eq('id', id);
+        const { error: updateError } = await context.supabase.from('marketing_submissions').update({ status: data.action, notes: data.notes, change_categories: data.categories, ...(data.action === 'approved' ? { manager_seen_at: null } : {}) }).eq('id', id);
         if (updateError) throw new Error(updateError.message);
         const { error: auditError } = await context.supabase.from('marketing_audit_events').insert({ submission_id: id, actor_id: context.userId, action: data.action, notes: [data.categories.join(', '), data.notes].filter(Boolean).join(' — ') });
         if (auditError) throw new Error(auditError.message);
@@ -79,5 +79,23 @@ export const uploadMarketingRevision = createServerFn({ method: 'POST' }).middle
     const { error: updateError } = await context.supabase.from('marketing_submissions').update({ png_path: paths.png, psd_path: paths.psd, version_number: row.version_number + 1, checks: [] }).eq('id', id);
     if (updateError) throw new Error(updateError.message);
     await context.supabase.from('marketing_audit_events').insert({ submission_id: id, actor_id: context.userId, action: 'edited version uploaded' });
+    return { ok: true };
+  });
+export const listManagerInbox = createServerFn({ method: 'GET' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
+  const { data, error } = await context.supabase.from('marketing_submissions').select('*').eq('submitted_by', context.userId).eq('status', 'approved').order('approved_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+  const items = await Promise.all((data ?? []).map(async (row) => {
+    const { data: url } = await supabaseAdmin.storage.from('flyers').createSignedUrl(row.png_path, 3600);
+    return { ...row, url: url?.signedUrl ?? null };
+  }));
+  return { items, unread: items.filter((row) => !row.manager_seen_at).length };
+});
+
+export const markInboxSeen = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
+  .inputValidator((input: { ids: string[] }) => z.object({ ids: z.array(z.string().uuid()).min(1).max(100) }).parse(input))
+  .handler(async ({ context, data }) => {
+    const { error } = await context.supabase.from('marketing_submissions').update({ manager_seen_at: new Date().toISOString() }).in('id', data.ids).eq('submitted_by', context.userId).is('manager_seen_at', null);
+    if (error) throw new Error(error.message);
     return { ok: true };
   });

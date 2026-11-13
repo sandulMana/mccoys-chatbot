@@ -19,6 +19,7 @@ import { Route as AuthenticatedMarketingIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedMarketingSubmissionIdRouteImport } from './routes/_authenticated/marketing.$submissionId'
 import { Route as AuthenticatedStudioIndexRouteImport } from './routes/_authenticated/studio.index'
 import { Route as AuthenticatedStudioDesignIdRouteImport } from './routes/_authenticated/studio.$designId'
+import { Route as AuthenticatedStudioInboxRouteImport } from './routes/_authenticated/studio.inbox'
 import { Route as ApiPublicMarketingCleanupRouteImport } from './routes/api/public/marketing-cleanup'
 
 const IndexRoute = IndexRouteImport.update({
@@ -74,6 +75,12 @@ const AuthenticatedStudioDesignIdRoute =
     path: '/$designId',
     getParentRoute: () => AuthenticatedStudioRoute,
   } as any)
+const AuthenticatedStudioInboxRoute =
+  AuthenticatedStudioInboxRouteImport.update({
+    id: '/inbox',
+    path: '/inbox',
+    getParentRoute: () => AuthenticatedStudioRoute,
+  } as any)
 const ApiPublicMarketingCleanupRoute =
   ApiPublicMarketingCleanupRouteImport.update({
     id: '/api/public/marketing-cleanup',
@@ -89,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/studio': typeof AuthenticatedStudioRouteWithChildren
   '/marketing/$submissionId': typeof AuthenticatedMarketingSubmissionIdRoute
   '/studio/$designId': typeof AuthenticatedStudioDesignIdRoute
+  '/studio/inbox': typeof AuthenticatedStudioInboxRoute
   '/api/public/marketing-cleanup': typeof ApiPublicMarketingCleanupRoute
   '/marketing/': typeof AuthenticatedMarketingIndexRoute
   '/studio/': typeof AuthenticatedStudioIndexRoute
@@ -99,6 +107,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/marketing/$submissionId': typeof AuthenticatedMarketingSubmissionIdRoute
   '/studio/$designId': typeof AuthenticatedStudioDesignIdRoute
+  '/studio/inbox': typeof AuthenticatedStudioInboxRoute
   '/api/public/marketing-cleanup': typeof ApiPublicMarketingCleanupRoute
   '/marketing': typeof AuthenticatedMarketingIndexRoute
   '/studio': typeof AuthenticatedStudioIndexRoute
@@ -113,6 +122,7 @@ export interface FileRoutesById {
   '/_authenticated/studio': typeof AuthenticatedStudioRouteWithChildren
   '/_authenticated/marketing/$submissionId': typeof AuthenticatedMarketingSubmissionIdRoute
   '/_authenticated/studio/$designId': typeof AuthenticatedStudioDesignIdRoute
+  '/_authenticated/studio/inbox': typeof AuthenticatedStudioInboxRoute
   '/api/public/marketing-cleanup': typeof ApiPublicMarketingCleanupRoute
   '/_authenticated/marketing/': typeof AuthenticatedMarketingIndexRoute
   '/_authenticated/studio/': typeof AuthenticatedStudioIndexRoute
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/studio'
     | '/marketing/$submissionId'
     | '/studio/$designId'
+    | '/studio/inbox'
     | '/api/public/marketing-cleanup'
     | '/marketing/'
     | '/studio/'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/marketing/$submissionId'
     | '/studio/$designId'
+    | '/studio/inbox'
     | '/api/public/marketing-cleanup'
     | '/marketing'
     | '/studio'
@@ -150,6 +162,7 @@ export interface FileRouteTypes {
     | '/_authenticated/studio'
     | '/_authenticated/marketing/$submissionId'
     | '/_authenticated/studio/$designId'
+    | '/_authenticated/studio/inbox'
     | '/api/public/marketing-cleanup'
     | '/_authenticated/marketing/'
     | '/_authenticated/studio/'
@@ -235,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudioDesignIdRouteImport
       parentRoute: typeof AuthenticatedStudioRoute
     }
+    '/_authenticated/studio/inbox': {
+      id: '/_authenticated/studio/inbox'
+      path: '/inbox'
+      fullPath: '/studio/inbox'
+      preLoaderRoute: typeof AuthenticatedStudioInboxRouteImport
+      parentRoute: typeof AuthenticatedStudioRoute
+    }
     '/api/public/marketing-cleanup': {
       id: '/api/public/marketing-cleanup'
       path: '/api/public/marketing-cleanup'
@@ -264,11 +284,13 @@ const AuthenticatedMarketingRouteWithChildren =
 
 interface AuthenticatedStudioRouteChildren {
   AuthenticatedStudioDesignIdRoute: typeof AuthenticatedStudioDesignIdRoute
+  AuthenticatedStudioInboxRoute: typeof AuthenticatedStudioInboxRoute
   AuthenticatedStudioIndexRoute: typeof AuthenticatedStudioIndexRoute
 }
 
 const AuthenticatedStudioRouteChildren: AuthenticatedStudioRouteChildren = {
   AuthenticatedStudioDesignIdRoute: AuthenticatedStudioDesignIdRoute,
+  AuthenticatedStudioInboxRoute: AuthenticatedStudioInboxRoute,
   AuthenticatedStudioIndexRoute: AuthenticatedStudioIndexRoute,
 }
 

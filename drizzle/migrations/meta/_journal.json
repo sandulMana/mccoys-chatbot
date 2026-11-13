@@ -29,6 +29,13 @@
       "when": 1794261484732,
       "tag": "0003_own_flyer_files_delete",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794500000000,
+      "tag": "0004_manager_inbox",
+      "breakpoints": true
     }
   ]
 }

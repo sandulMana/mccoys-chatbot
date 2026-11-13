@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, useNavigate, useParams } from "@tanstack
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { Flag, Inbox, LogOut, MoreHorizontal, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { CheckCircle2, Flag, Inbox, LogOut, MoreHorizontal, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -16,6 +16,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { supabase } from "@/integrations/supabase/client";
+import { listManagerInbox } from "@/lib/marketing.functions";
 import { deleteDesign, listDesigns, renameDesign, setDesignFlag } from "@/lib/studio.functions";
 
 type DesignItem = {
@@ -57,6 +58,9 @@ function StudioLayout() {
   const callFlag = useServerFn(setDesignFlag);
   const callDelete = useServerFn(deleteDesign);
   const { data: designs = [] } = useQuery({ queryKey: ["designs"], queryFn: () => fetchDesigns() });
+  const fetchInbox = useServerFn(listManagerInbox);
+  const { data: inbox } = useQuery({ queryKey: ["manager-inbox"], queryFn: () => fetchInbox(), refetchInterval: 30000 });
+  const unread = inbox?.unread ?? 0;
   const [q, setQ] = useState("");
   const [renaming, setRenaming] = useState<DesignItem | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -187,7 +191,7 @@ function StudioLayout() {
             </div>
           ))}
         </nav>
-        <div className="px-3 pb-3"><Button asChild variant="ghost" className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"><Link to="/marketing" search={{ folder: 'inbox' }}><Inbox /> Marketing Review</Link></Button></div>
+        <div className="space-y-1 px-3 pb-3"><Button asChild variant="ghost" className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"><Link to="/studio/inbox"><CheckCircle2 /> Approved Inbox{unread > 0 && <span className="ml-auto rounded-full bg-sidebar-primary px-2 py-0.5 text-xs font-bold text-sidebar-primary-foreground">{unread}</span>}</Link></Button><Button asChild variant="ghost" className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"><Link to="/marketing" search={{ folder: 'inbox' }}><Inbox /> Marketing Review</Link></Button></div>
         <div className="flex items-center gap-3 border-t border-sidebar-border p-4">
           <div className="grid h-10 w-10 place-items-center rounded-full bg-sidebar-primary font-bold text-sidebar-primary-foreground">
             {initials}

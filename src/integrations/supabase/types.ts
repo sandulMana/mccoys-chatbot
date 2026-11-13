@@ -169,6 +169,7 @@ export type Database = {
           delete_at: string | null
           design_id: string
           id: string
+          manager_seen_at: string | null
           needed_by: string
           notes: string
           png_path: string
@@ -190,6 +191,7 @@ export type Database = {
           delete_at?: string | null
           design_id: string
           id?: string
+          manager_seen_at?: string | null
           needed_by?: string
           notes?: string
           png_path: string
@@ -211,6 +213,7 @@ export type Database = {
           delete_at?: string | null
           design_id?: string
           id?: string
+          manager_seen_at?: string | null
           needed_by?: string
           notes?: string
           png_path?: string
