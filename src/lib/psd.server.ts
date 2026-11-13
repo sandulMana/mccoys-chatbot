@@ -1,6 +1,6 @@
 // Builds a single-layer, 8-bit RGB+alpha Photoshop (PSD) file from PNG bytes.
 // Pure JavaScript so it runs in the edge runtime — no canvas or native binaries.
-import { decode } from "fast-png";
+import { decode, encode } from "fast-png";
 
 class ByteWriter {
   private buf = new Uint8Array(4096);
@@ -165,4 +165,38 @@ export function pngToPsd(png: Uint8Array): Uint8Array {
   w.bytes(b);
   w.bytes(a);
   return w.result();
+}
+
+/** Reads the flattened composite image of an 8-bit RGB/grayscale PSD and returns PNG bytes. */
+export function psdToPng(psd: Uint8Array): Uint8Array {
+  const v = new DataView(psd.buffer, psd.byteOffset, psd.byteLength);
+  if (v.getUint32(0) !== 0x38425053 || v.getUint16(4) !== 1) throw new Error("Select a valid PSD file.");
+  const channels = v.getUint16(12), height = v.getUint32(14), width = v.getUint32(18);
+  const depth = v.getUint16(22), mode = v.getUint16(24);
+  if (depth !== 8 || (mode !== 3 && mode !== 1)) throw new Error("Photoshop file must be 8-bit RGB. Or upload a PNG preview too.");
+  let p = 26;
+  p += 4 + v.getUint32(p); // color mode data
+  p += 4 + v.getUint32(p); // image resources
+  p += 4 + v.getUint32(p); // layer & mask info
+  const compression = v.getUint16(p); p += 2;
+  const plane = width * height;
+  const planes = new Uint8Array(plane * channels);
+  if (compression === 0) planes.set(psd.subarray(p, p + planes.length));
+  else if (compression === 1) {
+    const rows = height * channels; let q = p + rows * 2; let out = 0;
+    for (let r = 0; r < rows; r++) {
+      const end = q + v.getUint16(p + r * 2); const rowEnd = out + width;
+      while (q < end && out < rowEnd) {
+        const n = (psd[q++]! << 24) >> 24;
+        if (n >= 0) { planes.set(psd.subarray(q, q + n + 1), out); q += n + 1; out += n + 1; }
+        else if (n !== -128) { planes.fill(psd[q++]!, out, out + 1 - n); out += 1 - n; }
+      }
+      q = end; out = rowEnd;
+    }
+  } else throw new Error("This Photoshop file uses unsupported compression. Upload a PNG preview too.");
+  const color = mode === 3 ? 3 : 1;
+  const outCh = Math.min(channels, color + 1);
+  const data = new Uint8Array(plane * outCh);
+  for (let i = 0; i < plane; i++) for (let c = 0; c < outCh; c++) data[i * outCh + c] = planes[c * plane + i]!;
+  return encode({ width, height, data, channels: outCh, depth: 8 });
 }

@@ -64,17 +64,19 @@ export const uploadMarketingRevision = createServerFn({ method: 'POST' }).middle
     const id = z.string().uuid().parse(data.get('id'));
     const { data: row, error } = await context.supabase.from('marketing_submissions').select('*').eq('id', id).single();
     if (error || !row) throw new Error('Submission not found.');
+    const psdFile = data.get('psd');
+    if (!(psdFile instanceof File)) throw new Error('Select the edited Photoshop PSD.');
+    const psdBytes = new Uint8Array(await psdFile.arrayBuffer());
+    validateReviewFile(psdBytes, 'psd');
+    const pngFile = data.get('png');
+    let pngBytes: Uint8Array;
+    if (pngFile instanceof File && pngFile.size > 0) { pngBytes = new Uint8Array(await pngFile.arrayBuffer()); }
+    else { const { psdToPng } = await import('./psd.server'); pngBytes = psdToPng(psdBytes); }
+    validateReviewFile(pngBytes, 'png');
     const paths: Record<'png' | 'psd', string> = { png: '', psd: '' };
-    for (const kind of ['png','psd'] as const) {
-      const file = data.get(kind);
-      if (!(file instanceof File)) throw new Error('Select both a PNG preview and a Photoshop PSD.');
-      validateReviewFile(new Uint8Array(await file.arrayBuffer()), kind);
-    }
-    for (const kind of ['png','psd'] as const) {
-      const file = data.get(kind);
-      if (!(file instanceof File)) throw new Error('Missing file.');
+    for (const [kind, bytes] of [['png', pngBytes], ['psd', psdBytes]] as const) {
       paths[kind] = `marketing/${context.userId}/${id}/${crypto.randomUUID()}.${kind}`;
-      const { error: uploadError } = await context.supabase.storage.from('flyers').upload(paths[kind], file, { contentType: kind === 'png' ? 'image/png' : 'image/vnd.adobe.photoshop' });
+      const { error: uploadError } = await context.supabase.storage.from('flyers').upload(paths[kind], bytes, { contentType: kind === 'png' ? 'image/png' : 'image/vnd.adobe.photoshop' });
       if (uploadError) throw new Error(uploadError.message);
     }
     const { error: updateError } = await context.supabase.from('marketing_submissions').update({ png_path: paths.png, psd_path: paths.psd, version_number: row.version_number + 1, checks: [] }).eq('id', id);
