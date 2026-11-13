@@ -68,10 +68,8 @@ export const uploadMarketingRevision = createServerFn({ method: 'POST' }).middle
     if (!(psdFile instanceof File)) throw new Error('Select the edited Photoshop PSD.');
     const psdBytes = new Uint8Array(await psdFile.arrayBuffer());
     validateReviewFile(psdBytes, 'psd');
-    const pngFile = data.get('png');
-    let pngBytes: Uint8Array;
-    if (pngFile instanceof File && pngFile.size > 0) { pngBytes = new Uint8Array(await pngFile.arrayBuffer()); }
-    else { const { psdToPng } = await import('./psd.server'); pngBytes = psdToPng(psdBytes); }
+    const { psdToPng } = await import('./psd.server');
+    const pngBytes = psdToPng(psdBytes);
     validateReviewFile(pngBytes, 'png');
     const paths: Record<'png' | 'psd', string> = { png: '', psd: '' };
     for (const [kind, bytes] of [['png', pngBytes], ['psd', psdBytes]] as const) {

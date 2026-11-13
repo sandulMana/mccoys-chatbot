@@ -173,7 +173,7 @@ export function psdToPng(psd: Uint8Array): Uint8Array {
   if (v.getUint32(0) !== 0x38425053 || v.getUint16(4) !== 1) throw new Error("Select a valid PSD file.");
   const channels = v.getUint16(12), height = v.getUint32(14), width = v.getUint32(18);
   const depth = v.getUint16(22), mode = v.getUint16(24);
-  if (depth !== 8 || (mode !== 3 && mode !== 1)) throw new Error("Photoshop file must be 8-bit RGB. Or upload a PNG preview too.");
+  if (depth !== 8 || (mode !== 3 && mode !== 1)) throw new Error("Photoshop file must be 8-bit RGB. Re-save it as 8-bit RGB.");
   let p = 26;
   p += 4 + v.getUint32(p); // color mode data
   p += 4 + v.getUint32(p); // image resources
@@ -193,7 +193,7 @@ export function psdToPng(psd: Uint8Array): Uint8Array {
       }
       q = end; out = rowEnd;
     }
-  } else throw new Error("This Photoshop file uses unsupported compression. Upload a PNG preview too.");
+  } else throw new Error("This Photoshop file uses unsupported compression. Re-save it with Maximize Compatibility on.");
   const color = mode === 3 ? 3 : 1;
   const outCh = Math.min(channels, color + 1);
   const data = new Uint8Array(plane * outCh);

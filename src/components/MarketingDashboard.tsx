@@ -37,7 +37,6 @@ export function MarketingDashboard({ folder = 'inbox', designId }: { folder?: Fo
   const [notes, setNotes] = useState('');
   const [deleteIds, setDeleteIds] = useState<string[]>([]);
   const [uploadId, setUploadId] = useState<string | null>(null);
-  const [png, setPng] = useState<File | null>(null);
   const [psd, setPsd] = useState<File | null>(null);
   const [downloading, setDownloading] = useState(false);
   const detail = submissions.find((row) => row.id === designId);
@@ -69,10 +68,10 @@ export function MarketingDashboard({ folder = 'inbox', designId }: { folder?: Fo
   const upload = useMutation({
     mutationFn: async () => {
       if (!uploadId || !psd) throw new Error('Select the Photoshop file.');
-      const form = new FormData(); form.set('id', uploadId); if (png) form.set('png', png); form.set('psd', psd);
+      const form = new FormData(); form.set('id', uploadId); form.set('psd', psd);
       return uploadFn({ data: form });
     },
-    onSuccess: () => { setUploadId(null); setPng(null); setPsd(null); qc.invalidateQueries({ queryKey: ['marketing'] }); qc.invalidateQueries({ queryKey: ['marketing-audit'] }); toast.success('Edited version uploaded. Review it, then click Approve.'); },
+    onSuccess: () => { setUploadId(null); setPsd(null); qc.invalidateQueries({ queryKey: ['marketing'] }); qc.invalidateQueries({ queryKey: ['marketing-audit'] }); toast.success('Edited version uploaded. Review it, then click Approve.'); },
     onError: (e: Error) => toast.error(e.message),
   });
   function toggle(id: string) { setSelected(previous => previous.includes(id) ? previous.filter(v => v !== id) : [...previous, id]); }
@@ -112,7 +111,7 @@ export function MarketingDashboard({ folder = 'inbox', designId }: { folder?: Fo
     </main>
     <Dialog open={flagIds.length > 0} onOpenChange={open => !open && setFlagIds([])}><DialogContent className="max-w-md"><DialogHeader><DialogTitle className="flex items-center gap-3 text-3xl text-primary"><Flag /> Flag: needs changes</DialogTitle></DialogHeader><p className="text-sm text-muted-foreground">{flagIds.length === 1 ? submissions.find(r => r.id === flagIds[0])?.title : `${flagIds.length} designs`}</p><div><p className="mb-2 text-sm font-semibold">What needs to change?</p><div className="flex flex-wrap gap-2">{CHANGE_CATEGORIES.map(category => <Button key={category} size="sm" variant={categories.includes(category) ? 'secondary' : 'outline'} aria-pressed={categories.includes(category)} onClick={() => setCategories(previous => previous.includes(category) ? previous.filter(c => c !== category) : [...previous, category])}>{categories.includes(category) && <Check />}{category}</Button>)}</div></div><label className="space-y-2 text-sm font-semibold">Notes for the team<Textarea className="mt-2 min-h-24 font-normal" value={notes} onChange={e => setNotes(e.target.value)} maxLength={2000} /></label><DialogFooter><Button variant="outline" onClick={() => setFlagIds([])}>Cancel</Button><Button disabled={decision.isPending || (!categories.length && !notes.trim())} onClick={() => decision.mutate({ data: { ids: flagIds, action: 'needs_changes', categories, notes } })}><Flag /> Move to Needs changes</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={deleteIds.length > 0} onOpenChange={open => !open && setDeleteIds([])}><DialogContent><DialogHeader><DialogTitle className="text-3xl text-primary">Delete permanently?</DialogTitle></DialogHeader><p className="text-sm">This removes {deleteIds.length} submission(s), their review history, and the team's files. This cannot be undone. The manager's original studio design is kept.</p><DialogFooter><Button variant="outline" onClick={() => setDeleteIds([])}>Cancel</Button><Button variant="destructive" disabled={decision.isPending} onClick={() => decision.mutate({ data: { ids: deleteIds, action: 'delete' } })}><Trash2 /> Delete now</Button></DialogFooter></DialogContent></Dialog>
-    <Dialog open={Boolean(uploadId)} onOpenChange={open => !open && setUploadId(null)}><DialogContent><DialogHeader><DialogTitle className="text-3xl text-primary">Upload edited version</DialogTitle></DialogHeader><p className="text-sm text-muted-foreground">Upload the edited Photoshop file. A preview is made from it automatically (or add your own PNG). Then review it and click Approve.</p><label className="space-y-2 text-sm font-semibold">PNG preview (optional)<Input type="file" aria-label="PNG preview" accept=".png" onChange={e => setPng(e.target.files?.[0] ?? null)} /></label><label className="space-y-2 text-sm font-semibold">Photoshop file<Input type="file" aria-label="Photoshop file" accept=".psd" onChange={e => setPsd(e.target.files?.[0] ?? null)} /></label><DialogFooter><Button variant="outline" onClick={() => setUploadId(null)}>Cancel</Button><Button disabled={!psd || upload.isPending} onClick={() => upload.mutate()}><Upload /> Upload edited version</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog open={Boolean(uploadId)} onOpenChange={open => !open && setUploadId(null)}><DialogContent><DialogHeader><DialogTitle className="text-3xl text-primary">Upload edited version</DialogTitle></DialogHeader><p className="text-sm text-muted-foreground">Upload the edited Photoshop file. A preview is made from it automatically. Then review it and click Approve.</p><label className="space-y-2 text-sm font-semibold">Photoshop file<Input type="file" aria-label="Photoshop file" accept=".psd" onChange={e => setPsd(e.target.files?.[0] ?? null)} /></label><DialogFooter><Button variant="outline" onClick={() => setUploadId(null)}>Cancel</Button><Button disabled={!psd || upload.isPending} onClick={() => upload.mutate()}><Upload /> Upload edited version</Button></DialogFooter></DialogContent></Dialog>
   </div>;
 }
 function Status({ row }: { row: Submission }) {
